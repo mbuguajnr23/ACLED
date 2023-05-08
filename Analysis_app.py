@@ -35,7 +35,43 @@ def events_per_year(data):
     ax.set_xlabel('Year')
     ax.set_ylabel('Number of Attacks')
     ax.set_title('Frequency of Attacks in Africa, 1997-2017')
+
+
+def fatalities_by_country(data):
+    # Create a pivot table to get the number of fatalities by country and year
+    fatalities_by_country = data.pivot_table(index='COUNTRY', columns='YEAR', values='FATALITIES', aggfunc='sum')
+
+    # Get the top 20 countries with the most fatalities
+    top_countries = fatalities_by_country.sum(axis=1).nlargest(20)
+
+    # Filter the pivot table to only include top countries
+    fatalities_by_country = fatalities_by_country.loc[top_countries.index]
+
+    # Create a scatter plot to show the intensity of conflicts
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.scatter(fatalities_by_country.mean(axis=1),  # X-axis: average number of fatalities
+               fatalities_by_country.std(axis=1),   # Y-axis: standard deviation of fatalities
+               s=fatalities_by_country.sum(axis=1) * 0.5,  # Size of bubble: total number of fatalities
+               alpha=0.5)  # Transparency of bubbles
+    ax.set_xlabel('Average number of fatalities')
+    ax.set_ylabel('Standard deviation of fatalities')
+    ax.set_title('Intensity of conflicts by country')
     
+
+def conflict_type_count(data):
+    conflict_counts = df['EVENT_TYPE'].value_counts()
+
+    # Create a bar chart
+    fig, ax = plt.subplots()
+    ax.bar(conflict_counts.index, conflict_counts.values)
+
+    # Set plot labels and title
+    ax.set_xlabel('Conflict Type')
+    ax.set_ylabel('Number of Conflicts')
+    ax.set_title('Types of Conflicts')
+    plt.xticks(rotation=90)
+
+
 
 
 # def event_type_chart(data):
@@ -85,15 +121,15 @@ def events_per_year(data):
 #     return fig
 
 
-# def events_per_country(data):
-#     events_per_country = data.groupby("country").size()
-#     fig, ax = plt.subplots()
-#     ax.bar(events_per_country.index, events_per_country.values)
-#     ax.set_xlabel("Country")
-#     ax.set_ylabel("Number of Events")
-#     ax.set_title("Number of events per country")
-#     ax.set_xticklabels(events_per_country.index, rotation=90)
-#     return fig
+def events_per_country(data):
+    events_per_country = data.groupby("COUNTRY").size()
+    fig, ax = plt.subplots()
+    ax.bar(events_per_country.index, events_per_country.values)
+    ax.set_xlabel("Country")
+    ax.set_ylabel("Number of Events")
+    ax.set_title("Number of events per country")
+    ax.set_xticklabels(events_per_country.index, rotation=90)
+    return fig
 
 
 # def event_type_per_country_chart(data):
@@ -135,19 +171,19 @@ fig2 = events_per_year(df)
 st.pyplot(fig2)
 
 # # create the country fatality chart and display it on Streamlit
-# fig3 = country_fatality_chart(df)
-# st.pyplot(fig3)
+fig3 = fatalities_by_country(df)
+st.pyplot(fig3)
 
 # # create the sub-event type chart and display it on Streamlit
-# fig4 = sub_event_type_chart(df)
-# st.pyplot(fig4)
+fig4 = conflict_type_count(df)
+st.pyplot(fig4)
 
 # # create the source scale chart and display it on streamlit
 # fig5 = source_scale_chart(df)
 # st.pyplot(fig5)
 
-# fig6 = events_per_country(df)
-# st.pyplot(fig6)
+fig6 = events_per_country(df)
+st.pyplot(fig6)
 
 # fig7 = event_type_per_country_chart(df)
 # st.pyplot(fig7)
