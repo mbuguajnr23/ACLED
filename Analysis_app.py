@@ -2,10 +2,12 @@ import numpy as np
 import pickle
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
 
 
 with open('data.pkl', 'rb') as f:
     df = pickle.load(f)
+
 
 def wordcloud_chart(data):
     from wordcloud import WordCloud, STOPWORDS
@@ -22,6 +24,19 @@ def wordcloud_chart(data):
     plt.axis("off")
     plt.tight_layout(pad = 0)
     
+def events_per_year(data):
+    # create a new column for the year
+    data['YEAR'] = data['EVENT_DATE'].dt.year
+    # group the data by year and count the number of events in each year
+    attacks_by_year = data.groupby('YEAR').size()
+    # create a line plot of the frequency of attacks over time
+    fig, ax = plt.subplots()
+    ax.plot(attacks_by_year.index, attacks_by_year.values)
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Number of Attacks')
+    ax.set_title('Frequency of Attacks in Africa, 1997-2017')
+    
+
 
 # def event_type_chart(data):
 #     event_type_counts = data['EVENT_TYPE'].value_counts()
@@ -115,9 +130,9 @@ fig1 = wordcloud_chart(df)
 st.pyplot(fig1)
 
 
-# # create the events per country chart and display it on Streamlit
-# fig2 = events_per_country_chart(df)
-# st.pyplot(fig2)
+# create the events per year on Streamlit
+fig2 = events_per_year(df)
+st.pyplot(fig2)
 
 # # create the country fatality chart and display it on Streamlit
 # fig3 = country_fatality_chart(df)
