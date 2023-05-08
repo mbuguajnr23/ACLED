@@ -3,6 +3,9 @@ import pickle
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import requests
+import folium
+from streamlit_folium import folium_static
 
 
 with open('data.pkl', 'rb') as f:
@@ -73,6 +76,96 @@ def conflict_type_count(data):
 
 
 
+def events_per_country(data):
+    events_per_country = data.groupby("COUNTRY").size()
+    fig, ax = plt.subplots()
+    ax.bar(events_per_country.index, events_per_country.values)
+    ax.set_xlabel("Country")
+    ax.set_ylabel("Number of Events")
+    ax.set_title("Number of events per country")
+    ax.set_xticklabels(events_per_country.index, rotation=90)
+    return fig
+
+
+def chloropleth_mapping(data):
+    conflicts_by_country = data.groupby('COUNTRY').size().reset_index(name='counts')
+    url = 'https://raw.githubusercontent.com/python-visualization/folium/master/examples/data'
+    response = requests.get(f'{url}/world-countries.json')
+    world_geojson = response.json()
+
+    m = folium.Map(location=[30, 0], zoom_start=2)
+    folium.GeoJson(
+        world_geojson,
+        name='World conflicts',
+        tooltip=folium.features.GeoJsonTooltip(fields=['name'], labels=False),
+        style_function=lambda x: {'fillColor': 'red', 'color': 'black', 'weight': 2, 'fillOpacity': 0.5}
+    ).add_to(m)
+
+    m = folium.Map(location=[0, 0], zoom_start=2)
+    folium.Choropleth(
+        geo_data=world_geojson,
+        name='choropleth',
+        data=conflicts_by_country,
+        columns=['COUNTRY', 'counts'],
+        key_on='feature.properties.name',
+        fill_color='YlOrRd',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name='Number of Conflicts',
+    ).add_to(m)
+    folium.LayerControl().add_to(m)
+    
+    folium_static(m)
+
+
+# set the option for Streamlit to not show the global use warning
+st.set_option('deprecation.showPyplotGlobalUse', False)
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from wordcloud import WordCloud
+
+# define the sidebar
+st.sidebar.title("Global Conflicts Dashboard")
+page = st.sidebar.selectbox("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
+                                              "Events per Year", "Fatalities by Country",
+                                              "Sub-event Type Count", "Events per Country"])
+
+# create the homepage
+if page == "Homepage":
+    st.title("Global Conflicts Dashboard")
+    st.write("This dashboard provides an overview of global conflicts from 2010 to 2020.")
+    st.write("Use the sidebar to navigate to different pages.")
+
+# create the choropleth map page
+elif page == "Choropleth Map":
+    st.title("Fatalities by Country")
+    fig = chloropleth_mapping(df)
+    st.plotly_chart(fig)
+
+# create the wordcloud chart page
+elif page == "Wordcloud Chart":
+    st.title("Wordcloud of Conflict Events")
+    fig = wordcloud_chart(df)
+    st.pyplot(fig)
+
+# create the events per year page
+elif page == "Events per Year":
+    st.title("Events per Year")
+    fig = events_per_year(df)
+    st.plotly_chart(fig)
+
+# create the fatalities by country page
+elif page == "Fatalities by Country":
+    st.title("Total Fatalities by Country")
+    fig = fatalities_by_country(df)
+    st.plotly_chart(fig)
+
+# create the sub-event type count page
+elif page == "Sub-event Type Count":
+    st.title("Sub-event Types")
 
 # def event_type_chart(data):
 #     event_type_counts = data['EVENT_TYPE'].value_counts()
@@ -120,18 +213,6 @@ def conflict_type_count(data):
 #     ax.set_title("Total Analysis of Sub-Event-Type")
 #     return fig
 
-
-def events_per_country(data):
-    events_per_country = data.groupby("COUNTRY").size()
-    fig, ax = plt.subplots()
-    ax.bar(events_per_country.index, events_per_country.values)
-    ax.set_xlabel("Country")
-    ax.set_ylabel("Number of Events")
-    ax.set_title("Number of events per country")
-    ax.set_xticklabels(events_per_country.index, rotation=90)
-    return fig
-
-
 # def event_type_per_country_chart(data):
 #     event_type_per_country = data.groupby(["country", "event_type"]).size()
 #     event_type_per_country = event_type_per_country.reset_index(name="counts")
@@ -158,32 +239,11 @@ def events_per_country(data):
 
 
 
-# set the option for Streamlit to not show the global use warning
-st.set_option('deprecation.showPyplotGlobalUse', False)
-
-# create the event type chart and display it on Streamlit
-fig1 = wordcloud_chart(df)
-st.pyplot(fig1)
-
-
-# create the events per year on Streamlit
-fig2 = events_per_year(df)
-st.pyplot(fig2)
-
-# # create the country fatality chart and display it on Streamlit
-fig3 = fatalities_by_country(df)
-st.pyplot(fig3)
-
-# # create the sub-event type chart and display it on Streamlit
-fig4 = conflict_type_count(df)
-st.pyplot(fig4)
-
 # # create the source scale chart and display it on streamlit
 # fig5 = source_scale_chart(df)
 # st.pyplot(fig5)
 
-fig6 = events_per_country(df)
-st.pyplot(fig6)
+
 
 # fig7 = event_type_per_country_chart(df)
 # st.pyplot(fig7)
