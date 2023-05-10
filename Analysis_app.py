@@ -121,11 +121,6 @@ def chloropleth_mapping(data):
 # set the option for Streamlit to not show the global use warning
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from wordcloud import WordCloud
 
 # define the sidebar
 st.sidebar.title("Global Conflicts Dashboard")
