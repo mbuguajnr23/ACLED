@@ -124,9 +124,7 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # define the sidebar
 st.sidebar.title("Global Conflicts Dashboard")
-page = st.sidebar.button("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
-                                              "Events per Year", "Fatalities by Country",
-                                              "Sub-event Type Count", "Events per Country"])
+page = st.sidebar.button("Homepage", "Choropleth Map", "Wordcloud Chart", "Events per Year", "Fatalities by Country", "Sub-event Type Count", "Events per Country")
 
 # create the homepage
 if page == "Homepage":
