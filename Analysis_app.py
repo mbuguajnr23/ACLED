@@ -138,6 +138,7 @@ if page == "Homepage":
     st.title("Global Conflicts Dashboard")
     st.write("This dashboard provides an overview of global conflicts from 2010 to 2020.")
     st.write("Use the sidebar to navigate to different pages.")
+    st.write("The Dashboard is still going through updates you can however look at the code on my github,(https://github.com/mbuguajnr23/ACLED) I'd love the feedback")
 
 # create the choropleth map page
 elif page == "Choropleth Map":
