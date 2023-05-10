@@ -129,7 +129,7 @@ from wordcloud import WordCloud
 
 # define the sidebar
 st.sidebar.title("Global Conflicts Dashboard")
-page = st.sidebar.selectbox("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
+page = st.sidebar.radio("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
                                               "Events per Year", "Fatalities by Country",
                                               "Sub-event Type Count", "Events per Country"])
 
