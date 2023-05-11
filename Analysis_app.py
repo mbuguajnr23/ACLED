@@ -121,10 +121,17 @@ def chloropleth_mapping(data):
 # set the option for Streamlit to not show the global use warning
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from wordcloud import WordCloud
 
 # define the sidebar
 st.sidebar.title("Global Conflicts Dashboard")
-page = st.sidebar.button("Homepage", "Choropleth Map", "Wordcloud Chart", "Events per Year", "Fatalities by Country", "Sub-event Type Count", "Events per Country")
+page = st.sidebar.radio("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
+                                              "Events per Year", "Fatalities by Country",
+                                              "Sub-event Type Count", "Events per Country"])
 
 # create the homepage
 if page == "Homepage":
