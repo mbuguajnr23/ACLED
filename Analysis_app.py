@@ -7,247 +7,176 @@ import requests
 import folium
 from streamlit_folium import folium_static
 
-
+#import the dataset
 with open('data.pkl', 'rb') as f:
     df = pickle.load(f)
 
+def conflict_events_by_country(data):
+    # Group the data by country and count the number of events
+    country_counts = data['COUNTRY'].value_counts()
 
-def wordcloud_chart(data):
-    from wordcloud import WordCloud, STOPWORDS
-    import matplotlib.pyplot as plt
-    text = " ".join(df['NOTES'].dropna()) 
-    # Concatenate all the text data from your dataset into a single string
-    wordcloud = WordCloud(width=800, height=800,
-                      background_color= 'white',
-                      stopwords= set(STOPWORDS),
-                      min_font_size= 10)
-    wordcloud.generate(text)
-    plt.figure(figsize = (8, 8), facecolor = None)
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    plt.tight_layout(pad = 0)
-    
-def events_per_year(data):
-    # create a new column for the year
-    data['YEAR'] = data['EVENT_DATE'].dt.year
-    # group the data by year and count the number of events in each year
-    attacks_by_year = data.groupby('YEAR').size()
-    # create a line plot of the frequency of attacks over time
-    fig, ax = plt.subplots()
-    ax.plot(attacks_by_year.index, attacks_by_year.values)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Number of Attacks')
-    ax.set_title('Frequency of Attacks in Africa, 1997-2017')
-
-
-def fatalities_by_country(data):
-    # Create a pivot table to get the number of fatalities by country and year
-    fatalities_by_country = data.pivot_table(index='COUNTRY', columns='YEAR', values='FATALITIES', aggfunc='sum')
-
-    # Get the top 20 countries with the most fatalities
-    top_countries = fatalities_by_country.sum(axis=1).nlargest(20)
-
-    # Filter the pivot table to only include top countries
-    fatalities_by_country = fatalities_by_country.loc[top_countries.index]
-
-    # Create a scatter plot to show the intensity of conflicts
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.scatter(fatalities_by_country.mean(axis=1),  # X-axis: average number of fatalities
-               fatalities_by_country.std(axis=1),   # Y-axis: standard deviation of fatalities
-               s=fatalities_by_country.sum(axis=1) * 0.5,  # Size of bubble: total number of fatalities
-               alpha=0.5)  # Transparency of bubbles
-    ax.set_xlabel('Average number of fatalities')
-    ax.set_ylabel('Standard deviation of fatalities')
-    ax.set_title('Intensity of conflicts by country')
-    
-
-def conflict_type_count(data):
-    conflict_counts = df['EVENT_TYPE'].value_counts()
-
-    # Create a bar chart
-    fig, ax = plt.subplots()
-    ax.bar(conflict_counts.index, conflict_counts.values)
-
-    # Set plot labels and title
-    ax.set_xlabel('Conflict Type')
-    ax.set_ylabel('Number of Conflicts')
-    ax.set_title('Types of Conflicts')
+    # Create a bar chart to visualize the counts
+    plt.figure(figsize=(16, 12))
+    country_counts.plot(kind='bar')
+    plt.xlabel('Country')
+    plt.ylabel('Number of Conflict Events')
+    plt.title('Count of Conflict Events by Country')
     plt.xticks(rotation=90)
+    plt.tight_layout()
+    st.title("Conflict events by country")
+    st.write("This chart shows conflict events by country.")
+
+    # Display the bar chart in Streamlit
+    st.pyplot(plt)
+
+# Count of Conflict Events by Year
+def count_of_Conflict_Events_by_Year(df):
+    # Group the data by year and count the number of events
+    year_counts = df['YEAR'].value_counts().sort_index()
+
+    # Create a line chart to visualize the counts
+    plt.figure(figsize=(10, 6))
+    year_counts.plot(kind='line', marker='o')
+    plt.xlabel('Year')
+    plt.ylabel('Number of Conflict Events')
+    plt.title('Count of Conflict Events by Year')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    st.write('Count of Conflict Events by Year')
+    # Display the line chart in Streamlit
+    st.pyplot(plt)
+
+# Distribution of Conflict Event Types
+def distribution_of_conflict_event_types(df):
+    # Calculate the frequency of each event type
+    event_type_counts = df['EVENT_TYPE'].value_counts()
+
+    # Create a pie chart to visualize the distribution
+    plt.figure(figsize=(8, 8))
+    event_type_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90)
+    plt.axis('equal')
+    plt.title('Distribution of Conflict Event Types')
+    plt.tight_layout()
+
+    st.write('Distribution of Conflict Event Types')
+    # Display the pie chart in Streamlit
+    st.pyplot(plt)
+
+def summary_statistics_of_fatalities(df):
+    # Calculate summary statistics of fatalities
+    fatalities_stats = df['FATALITIES'].describe()
+
+    # Display the summary statistics
+    st.subheader('Summary Statistics of Fatalities')
+    st.write(fatalities_stats)
+
+def fatalities_per_year(df):
+    # Group the data by year and calculate the total fatalities
+    fatalities_per_year = df.groupby('YEAR')['FATALITIES'].sum()
+
+    # Create a bar chart to visualize fatalities per year
+    plt.figure(figsize=(8, 6))
+    fatalities_per_year.plot(kind='bar')
+    plt.xlabel('Year')
+    plt.ylabel('Total Fatalities')
+    plt.title('Fatalities per Year')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # Display the bar chart in Streamlit
+    st.subheader('Fatalities per Year')
+    st.pyplot(plt)
 
 
+def distribution_of_conflict_events_by_location(data):
+    # Group the data by location and count the number of events
+    location_counts = data['COUNTRY'].value_counts().reset_index()
+    location_counts.columns = ['COUNTRY', 'Count']
 
-def events_per_country(data):
-    events_per_country = data.groupby("COUNTRY").size()
-    fig, ax = plt.subplots()
-    ax.bar(events_per_country.index, events_per_country.values)
-    ax.set_xlabel("Country")
-    ax.set_ylabel("Number of Events")
-    ax.set_title("Number of events per country")
-    ax.set_xticklabels(events_per_country.index, rotation=90)
-    return fig
-
-
-def chloropleth_mapping(data):
-    conflicts_by_country = data.groupby('COUNTRY').size().reset_index(name='counts')
+    # Fetch the world countries GeoJSON data
     url = 'https://raw.githubusercontent.com/python-visualization/folium/master/examples/data'
     response = requests.get(f'{url}/world-countries.json')
     world_geojson = response.json()
 
-    m = folium.Map(location=[30, 0], zoom_start=2)
-    folium.GeoJson(
-        world_geojson,
-        name='World conflicts',
-        tooltip=folium.features.GeoJsonTooltip(fields=['name'], labels=False),
-        style_function=lambda x: {'fillColor': 'red', 'color': 'black', 'weight': 2, 'fillOpacity': 0.5}
-    ).add_to(m)
-
-    m = folium.Map(location=[0, 0], zoom_start=2)
+    # Create a choropleth map
+    m = folium.Map(location=[0, 0], zoom_start=3.3)
     folium.Choropleth(
         geo_data=world_geojson,
-        name='choropleth',
-        data=conflicts_by_country,
-        columns=['COUNTRY', 'counts'],
+        name='Choropleth',
+        data=location_counts,
+        columns=['COUNTRY', 'Count'],
         key_on='feature.properties.name',
         fill_color='YlOrRd',
         fill_opacity=0.7,
         line_opacity=0.2,
-        legend_name='Number of Conflicts',
+        legend_name='Number of Conflict Events',
+        highlight=True
     ).add_to(m)
+
     folium.LayerControl().add_to(m)
-    
+
+    # Display the choropleth map in Streamlit
     folium_static(m)
 
 
-# set the option for Streamlit to not show the global use warning
-st.set_option('deprecation.showPyplotGlobalUse', False)
+# Set up sidebar options
+sidebar_options = ['Homepage','Descriptive Analysis', 'Temporal Analysis', 'Geospatial Analysis', 'Actor Analysis', 'Event Type Analysis', 'Casualty Analysis']
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from wordcloud import WordCloud
+# Set the page title
+st.title('African Conflicts Dashboard')
+st.write("This dashboard provides an overview of global conflicts from 2010 to 2020.")
 
-# define the sidebar
-st.sidebar.title("Global Conflicts Dashboard")
-page = st.sidebar.radio("Select a page", ["Homepage", "Choropleth Map", "Wordcloud Chart", 
-                                              "Events per Year", "Fatalities by Country",
-                                              "Sub-event Type Count", "Events per Country"])
+# Add a sidebar to select the analysis type
+selected_analysis = st.sidebar.selectbox('Select Analysis', sidebar_options)
 
-# create the homepage
-if page == "Homepage":
-    st.title("Global Conflicts Dashboard")
-    st.write("This dashboard provides an overview of global conflicts from 2010 to 2020.")
+
+# Perform analysis based on the selected option
+if selected_analysis == 'Homepage':
     st.write("Use the sidebar to navigate to different pages.")
     st.write("The Dashboard is still going through updates you can however look at the code on my github,(https://github.com/mbuguajnr23/ACLED) I'd love the feedback")
+    distribution_of_conflict_events_by_location(df)
 
-# create the choropleth map page
-elif page == "Choropleth Map":
-    st.title("Fatalities by Country")
-    fig = chloropleth_mapping(df)
-    st.plotly_chart(fig)
+elif selected_analysis == 'Descriptive Analysis':
+    # Add code for descriptive analysis
+    st.header('Descriptive Analysis')
 
-# create the wordcloud chart page
-elif page == "Wordcloud Chart":
-    st.title("Wordcloud of Conflict Events")
-    fig = wordcloud_chart(df)
-    st.pyplot(fig)
+    conflict_events_by_country(df)
+    count_of_Conflict_Events_by_Year(df)
+    distribution_of_conflict_event_types(df)
+    summary_statistics_of_fatalities(df)
+    fatalities_per_year(df)
 
-# create the events per year page
-elif page == "Events per Year":
-    st.title("Events per Year")
-    fig = events_per_year(df)
-    st.plotly_chart(fig)
+    
 
-# create the fatalities by country page
-elif page == "Fatalities by Country":
-    st.title("Total Fatalities by Country")
-    fig = fatalities_by_country(df)
-    st.plotly_chart(fig)
+elif selected_analysis == 'Temporal Analysis':
+    # Add code for temporal analysis
+    st.header('Temporal Analysis')
+    # ...
 
-# create the sub-event type count page
-elif page == "Sub-event Type Count":
-    st.title("Sub-event Types")
+elif selected_analysis == 'Geospatial Analysis':
+    # Add code for geospatial analysis
+    st.header('Geospatial Analysis')
+    # ...
 
-# def event_type_chart(data):
-#     event_type_counts = data['EVENT_TYPE'].value_counts()
-#     fig, ax = plt.subplots()
-#     ax.pie(event_type_counts.values,
-#            labels=event_type_counts.index, autopct='%1.1f%%')
-#     ax.set_title("Event Type Distribution")
-#     return fig
+elif selected_analysis == 'Actor Analysis':
+    # Add code for actor analysis
+    st.header('Actor Analysis')
+    # ...
 
+elif selected_analysis == 'Event Type Analysis':
+    # Add code for event type analysis
+    st.header('Event Type Analysis')
+    # ...
 
-# def events_per_country_chart(data):
-#     events_per_country = data.groupby("year").size()
-#     fig, ax = plt.subplots()
-#     ax.bar(events_per_country.index, events_per_country.values)
-#     ax.set_xlabel("year")
-#     ax.set_ylabel("Number of events")
-#     ax.set_title("Number of events per country")
-#     return fig
+elif selected_analysis == 'Casualty Analysis':
+    # Add code for casualty analysis
+    st.header('Casualty Analysis')
+    # ...
 
+# visualizations to the dashboard
+# Conflict events by country
 
-# def country_fatality_chart(data):
-#     country_fatality = data.groupby("country")["fatalities"].sum()
-#     fig, ax = plt.subplots()
-#     ax.pie(country_fatality.values,
-#            labels=country_fatality.index)
-#     ax.set_title("Percentage of Fatalities in Each Country")
-#     return fig
-
-
-# def source_scale_chart(data):
-#     source_scale_events = data.groupby("source_scale").size()
-#     fig, ax = plt.subplots()
-#     ax.pie(source_scale_events.values,
-#            labels=source_scale_events.index)
-#     ax.set_title("Number of Events per Source Scale")
-#     return fig
-
-
-# def sub_event_type_chart(data):
-#     sub_event_type_events = data.groupby("sub_event_type").size()
-#     fig, ax = plt.subplots()
-#     ax.barh(sub_event_type_events.index, sub_event_type_events.values)
-#     ax.set_xlabel("Number of Events")
-#     ax.set_ylabel("Sub-Event-Type")
-#     ax.set_title("Total Analysis of Sub-Event-Type")
-#     return fig
-
-# def event_type_per_country_chart(data):
-#     event_type_per_country = data.groupby(["country", "event_type"]).size()
-#     event_type_per_country = event_type_per_country.reset_index(name="counts")
-#     event_type_per_country = event_type_per_country.pivot(
-#         index='country', columns='event_type', values='counts')
-#     event_type_per_country.plot(kind='bar', stacked=True)
-#     plt.xlabel("Country")
-#     plt.ylabel("Number of events")
-#     plt.title("Event Type Distribution per Country")
-#     return plt.gcf()
-
-
-# def event_type_per_country_pie(data):
-#     event_type_per_country = data.groupby(
-#         ["country", "event_type"]).size().reset_index(name='counts')
-#     countries = event_type_per_country['country'].unique()
-#     for country in countries:
-#         country_data = event_type_per_country[event_type_per_country['country'] == country]
-#         fig, ax = plt.subplots()
-#         ax.pie(country_data['counts'],
-#                labels=country_data['event_type'], autopct='%1.1f%%')
-#         ax.set_title(f"Event Type Distribution in {country}")
-#         st.pyplot(fig)
-
-
-
-# # create the source scale chart and display it on streamlit
-# fig5 = source_scale_chart(df)
-# st.pyplot(fig5)
-
-
-
-# fig7 = event_type_per_country_chart(df)
-# st.pyplot(fig7)
-
-# fig8 = event_type_per_country_pie(df)
-# st.pyplot(fig8)
+# # Run the Streamlit app
+# if __name__ == '__main__':
+#     main()
