@@ -7,6 +7,7 @@ import requests
 import folium
 from streamlit_folium import folium_static
 import networkx as nx
+import seaborn as sns
 
 #import the dataset
 with open('data.pkl', 'rb') as f:
@@ -131,13 +132,32 @@ def relationships_between_actors(data):
     pos = nx.kamada_kawai_layout(G)
 
     # Draw the network graph
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(16, 8))
     nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500, edge_color='gray', arrows=True)
     plt.title('Relationships Between Actors')
     plt.tight_layout()
 
     # Display the network graph in Streamlit
     st.subheader('relationships_between_actors')
+    st.pyplot(plt)
+
+def correlation_analysis(data):
+    # Select the relevant columns for correlation analysis
+    selected_columns = ['EVENT_TYPE', 'FATALITIES', 'GEO_PRECISION']
+
+    # Subset the data with the selected columns
+    subset_data = data[selected_columns]
+
+    # Calculate the correlation matrix
+    correlation_matrix = subset_data.corr()
+
+    # Create a heatmap to visualize the correlation matrix
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+    plt.title('Correlation Analysis')
+    plt.tight_layout()
+
+    # Display the heatmap in Streamlit
     st.pyplot(plt)
 
 # Set up sidebar options
@@ -172,6 +192,8 @@ elif selected_analysis == 'Descriptive Analysis':
 elif selected_analysis == 'Temporal Analysis':
     # Add code for temporal analysis
     st.header('Temporal Analysis')
+    # Perform the analysis
+    correlation_analysis(df)
     # ...
 
 elif selected_analysis == 'Geospatial Analysis':
