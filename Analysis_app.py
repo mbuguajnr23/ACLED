@@ -181,22 +181,19 @@ def time_series_analysis(data):
     # Display the plot in Streamlit
     st.pyplot(plt)
 
-def time_based_aggregation(data, frequency='Y'):
-    # Convert the 'EVENT_DATE' column to datetime format
-    data['EVENT_DATE'] = pd.to_datetime(data['EVENT_DATE'])
-
+def time_based_aggregation(data, frequency):
     # Set 'EVENT_DATE' as the index
     data.set_index('EVENT_DATE', inplace=True)
 
-    # Group the data by the specified frequency and count the number of events
-    events_by_period = data.resample(frequency).size()
+    # Resample the data based on the specified frequency
+    aggregated_data = data.resample(frequency).size()
 
-    # Plot the time-based aggregation
+    # Plot the aggregated data
     plt.figure(figsize=(10, 6))
-    events_by_period.plot(kind='bar')
-    plt.xlabel('Time Period')
+    aggregated_data.plot()
+    plt.xlabel(frequency.capitalize())
     plt.ylabel('Number of Events')
-    plt.title('Time-based Aggregation of Conflict Events')
+    plt.title(f'Time-based Aggregation ({frequency.capitalize()})')
     plt.tight_layout()
 
     # Display the plot in Streamlit
@@ -237,7 +234,7 @@ elif selected_analysis == 'Temporal Analysis':
     st.header('Temporal Analysis')
     # Perform the analysis
     time_series_analysis(df)
-    time_based_aggregation(df, frequency='Y')
+    # time_based_aggregation(df, 'year')
     
     # ...
 
