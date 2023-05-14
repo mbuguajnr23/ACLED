@@ -160,6 +160,48 @@ def correlation_analysis(data):
     # Display the heatmap in Streamlit
     st.pyplot(plt)
 
+def time_series_analysis(data):
+    # Convert the 'EVENT_DATE' column to datetime format
+    data['EVENT_DATE'] = pd.to_datetime(data['EVENT_DATE'])
+
+    # Set 'EVENT_DATE' as the index
+    data.set_index('EVENT_DATE', inplace=True)
+
+    # Group the data by year and count the number of events
+    events_by_year = data.resample('Y').size()
+
+    # Plot the time series of events
+    plt.figure(figsize=(10, 6))
+    events_by_year.plot()
+    plt.xlabel('Year')
+    plt.ylabel('Number of Events')
+    plt.title('Time Series of Conflict Events')
+    plt.tight_layout()
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
+
+def time_based_aggregation(data, frequency='Y'):
+    # Convert the 'EVENT_DATE' column to datetime format
+    data['EVENT_DATE'] = pd.to_datetime(data['EVENT_DATE'])
+
+    # Set 'EVENT_DATE' as the index
+    data.set_index('EVENT_DATE', inplace=True)
+
+    # Group the data by the specified frequency and count the number of events
+    events_by_period = data.resample(frequency).size()
+
+    # Plot the time-based aggregation
+    plt.figure(figsize=(10, 6))
+    events_by_period.plot(kind='bar')
+    plt.xlabel('Time Period')
+    plt.ylabel('Number of Events')
+    plt.title('Time-based Aggregation of Conflict Events')
+    plt.tight_layout()
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
+
 # Set up sidebar options
 sidebar_options = ['Homepage','Descriptive Analysis', 'Temporal Analysis', 'Geospatial Analysis', 'Actor Analysis', 'Event Type Analysis', 'Casualty Analysis']
 
@@ -187,13 +229,16 @@ elif selected_analysis == 'Descriptive Analysis':
     summary_statistics_of_fatalities(df)
     fatalities_per_year(df)
     relationships_between_actors(df)
+    correlation_analysis(df)
     
 
 elif selected_analysis == 'Temporal Analysis':
     # Add code for temporal analysis
     st.header('Temporal Analysis')
     # Perform the analysis
-    correlation_analysis(df)
+    time_series_analysis(df)
+    time_based_aggregation(df, frequency='Y')
+    
     # ...
 
 elif selected_analysis == 'Geospatial Analysis':
