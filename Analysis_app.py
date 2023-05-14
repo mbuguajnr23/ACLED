@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import requests
 import folium
 from streamlit_folium import folium_static
+import networkx as nx
 
 #import the dataset
 with open('data.pkl', 'rb') as f:
@@ -119,13 +120,32 @@ def distribution_of_conflict_events_by_location(data):
     # Display the choropleth map in Streamlit
     folium_static(m)
 
+def relationships_between_actors(data):
+    # Create a directed graph
+    G = nx.DiGraph()
+
+    # Add edges between actors
+    G.add_edges_from(data[['ACTOR1', 'ACTOR2']].values)
+
+    # Calculate node positions using the Kamada-Kawai layout
+    pos = nx.kamada_kawai_layout(G)
+
+    # Draw the network graph
+    plt.figure(figsize=(10, 8))
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500, edge_color='gray', arrows=True)
+    plt.title('Relationships Between Actors')
+    plt.tight_layout()
+
+    # Display the network graph in Streamlit
+    st.subheader('relationships_between_actors')
+    st.pyplot(plt)
 
 # Set up sidebar options
 sidebar_options = ['Homepage','Descriptive Analysis', 'Temporal Analysis', 'Geospatial Analysis', 'Actor Analysis', 'Event Type Analysis', 'Casualty Analysis']
 
 # Set the page title
 st.title('African Conflicts Dashboard')
-st.write("This dashboard provides an overview of global conflicts from 2010 to 2020.")
+st.write("This dashboard provides an overview of global conflicts from 1997 to 2017.")
 
 # Add a sidebar to select the analysis type
 selected_analysis = st.sidebar.selectbox('Select Analysis', sidebar_options)
@@ -146,7 +166,7 @@ elif selected_analysis == 'Descriptive Analysis':
     distribution_of_conflict_event_types(df)
     summary_statistics_of_fatalities(df)
     fatalities_per_year(df)
-
+    relationships_between_actors(df)
     
 
 elif selected_analysis == 'Temporal Analysis':
